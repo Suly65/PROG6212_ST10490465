@@ -1,0 +1,55 @@
+name: Validate POE Structure
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check /docs folder exists
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "ERROR: /docs folder is missing."
+            exit 1
+          fi
+          echo "/docs folder found."
+
+      - name: Check required files exist in /docs
+        run: |
+          missing=0
+
+          if ! ls docs/*.png 1> /dev/null 2>&1 && ! ls docs/*.pdf 1> /dev/null 2>&1; then
+            echo "ERROR: No ERD file (.png or .pdf) found in /docs."
+            missing=1
+          fi
+
+          if ! ls docs/*.sql 1> /dev/null 2>&1; then
+            echo "ERROR: No SQL script (.sql) found in /docs."
+            missing=1
+          fi
+
+          if ! ls docs/*.md 1> /dev/null 2>&1 && ! ls docs/*.pdf 1> /dev/null 2>&1; then
+            echo "ERROR: No API endpoint plan (.md or .pdf) found in /docs."
+            missing=1
+          fi
+
+          if [ $missing -eq 1 ]; then
+            exit 1
+          fi
+
+          echo "All required planning documents found in /docs."
+
+      - name: Check README exists
+        run: |
+          if [ ! -f "README.md" ]; then
+            echo "ERROR: README.md is missing from repository root."
+            exit 1
+          fi
+          echo "README.md found."
